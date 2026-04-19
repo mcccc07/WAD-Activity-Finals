@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "jsx": "react-jsx",
+        "paths": {
+            "@/*": ["resources/js/*"],
+            "ziggy-js": ["vendor/tightenco/ziggy/dist/index.mjs"]
+        }
+    },
+    "exclude": ["node_modules", "public"]
+}
