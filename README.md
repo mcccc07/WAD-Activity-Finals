@@ -1,6 +1,7 @@
-<div style="center">
+<div style="text-align: center;">
 
 # E-store
+
 ### Your one-stop ecommerce shop
 
 ## Eloquent Relationship
