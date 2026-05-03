@@ -5,6 +5,8 @@ use App\Http\Controllers\SellerController;
 use App\Http\Controllers\SellerProductController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Settings\ProfileController as SettingsProfileController;
+use App\Http\Controllers\Settings\PasswordController as SettingsPasswordController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Application;
@@ -19,6 +21,26 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
+
+// Public products listing (no auth required)
+Route::get('/products', function () {
+    $products = App\Models\Product::with('sellers')
+        ->whereHas('sellers')
+        ->latest()
+        ->get()
+        ->map(function ($product) {
+            $seller = $product->sellers->first();
+            return [
+                'id'       => $product->id,
+                'name'     => $product->name,
+                'price'    => $seller?->pivot->price ?? $product->price,
+                'stock'    => $seller?->pivot->stock ?? 0,
+                'seller'   => $seller?->shop_name ?? 'Unknown Seller',
+                'category' => $product->category_id,
+            ];
+        });
+    return response()->json($products);
+})->name('products.public');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
@@ -55,6 +77,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Settings Routes
+    Route::get('/settings/profile', [SettingsProfileController::class, 'edit'])->name('settings.profile.edit');
+    Route::patch('/settings/profile', [SettingsProfileController::class, 'update'])->name('settings.profile.update');
+    Route::delete('/settings/profile', [SettingsProfileController::class, 'destroy'])->name('settings.profile.destroy');
+
+    Route::get('/settings/password', [SettingsPasswordController::class, 'edit'])->name('settings.password.edit');
+    Route::put('/settings/password', [SettingsPasswordController::class, 'update'])->name('settings.password.update');
 
     // Seller Registration Routes
     Route::get('/seller/create', [SellerController::class, 'create'])->name('seller.create');
