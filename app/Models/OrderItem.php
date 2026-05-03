@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrderItem extends Model
 {
+    protected $table = 'orderitem';
+
     public function order()
     {
         return $this->belongsTo(Order::class);

@@ -6,13 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class Seller extends Model
 {
+    protected $fillable = [
+        'user_id',
+        'shop_name',
+        'shop_description',
+        'shop_logo',
+        'status',
+    ];
+
     public function profile()
     {
         return $this->hasOne(Profile::class);
     }
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'seller_product')
+        return $this->belongsToMany(Product::class, 'sellerproduct')
             ->withPivot('stock', 'price')
             ->withTimestamps();
     }

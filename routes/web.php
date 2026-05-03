@@ -21,15 +21,35 @@ Route::get('/', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
-        if (Auth::user()->role === 'admin') {
+        $user = Auth::user();
+        if ($user->role === 'admin') {
             return redirect()->route('admin.index');
         }
-        return Inertia::render('User/Dashboard');
+
+        $sellerStats = null;
+        if ($user->role === 'seller') {
+            $seller = App\Models\Seller::where('user_id', $user->id)->first();
+            if ($seller) {
+                $sellerStats = [
+                    'total_orders' => $seller->orders()->count(),
+                    'stocks_available' => $seller->products()->sum('sellerproduct.stock'),
+                    'orders_scheduled' => $seller->orders()->where('status', 'scheduled_for_ship_out')->count(),
+                ];
+            }
+        }
+
+        return Inertia::render('User/Dashboard', [
+            'sellerStats' => $sellerStats
+        ]);
     })->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Seller Registration Routes
+    Route::get('/seller/create', [SellerController::class, 'create'])->name('seller.create');
+    Route::post('/seller', [SellerController::class, 'store'])->name('seller.store');
 
     // Admin Routes
     Route::middleware(AdminMiddleware::class)->group(function () {

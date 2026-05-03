@@ -24,13 +24,18 @@ class SellerController extends Controller
     public function store(Request $request)
     {
         $validate = $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|integer|min:0',
-            'stock' => 'required|integer|min:0',
-            'description' => 'nullable|string',
+            'shop_name' => 'required|string|max:255',
+            'shop_description' => 'nullable|string',
         ]);
+        
+        $user = Auth::user();
+        $validate['user_id'] = $user->id;
+        
         Seller::create($validate);
-        return redirect()->route('seller.index');
+        
+        $user->update(['role' => 'seller']);
+        
+        return redirect()->route('dashboard')->with('success', 'Seller profile created successfully.');
     }
 
     public function show(Seller $seller)
