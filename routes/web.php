@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SellerController;
+use App\Http\Controllers\SellerProductController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\AdminController;
 use App\Http\Middleware\AdminMiddleware;
@@ -27,6 +28,9 @@ Route::middleware('auth')->group(function () {
         }
 
         $sellerStats = null;
+        $sellerProducts = null;
+        $availableProducts = null;
+
         if ($user->role === 'seller') {
             $seller = App\Models\Seller::where('user_id', $user->id)->first();
             if ($seller) {
@@ -35,11 +39,16 @@ Route::middleware('auth')->group(function () {
                     'stocks_available' => $seller->products()->sum('sellerproduct.stock'),
                     'orders_scheduled' => $seller->orders()->where('status', 'scheduled_for_ship_out')->count(),
                 ];
+                $sellerProducts = $seller->products()->take(5)->get();
             }
+        } else if ($user->role === 'user') {
+            $availableProducts = App\Models\Product::with('sellers')->whereHas('sellers')->latest()->get();
         }
 
         return Inertia::render('User/Dashboard', [
-            'sellerStats' => $sellerStats
+            'sellerStats' => $sellerStats,
+            'sellerProducts' => $sellerProducts,
+            'availableProducts' => $availableProducts
         ]);
     })->name('dashboard');
 
@@ -51,6 +60,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/seller/create', [SellerController::class, 'create'])->name('seller.create');
     Route::post('/seller', [SellerController::class, 'store'])->name('seller.store');
 
+    // Seller Products Routes
+    Route::resource('/seller/products', SellerProductController::class)->names([
+        'index' => 'seller.products.index',
+        'create' => 'seller.products.create',
+        'store' => 'seller.products.store',
+        'edit' => 'seller.products.edit',
+        'update' => 'seller.products.update',
+        'destroy' => 'seller.products.destroy',
+    ]);
+
     // Admin Routes
     Route::middleware(AdminMiddleware::class)->group(function () {
         Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.index');
@@ -58,6 +77,9 @@ Route::middleware('auth')->group(function () {
         // Admin user management - points to AdminController
         Route::get('/admin/users/create', [AdminController::class, 'create'])->name('users.create');
         Route::post('/admin/users', [AdminController::class, 'store'])->name('users.store');
+        Route::get('/admin/users/{user}', [AdminController::class, 'show'])->name('users.show');
+        Route::get('/admin/users/{user}/edit', [AdminController::class, 'edit'])->name('users.edit');
+        Route::put('/admin/users/{user}', [AdminController::class, 'update'])->name('users.update');
         Route::delete('/admin/users/{user}', [AdminController::class, 'destroy'])->name('users.destroy');
 
         Route::resource('/admin/sellers', SellerController::class);

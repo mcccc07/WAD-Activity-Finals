@@ -1,23 +1,23 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Create() {
-    const { data, setData, post, processing, errors } = useForm({
-        name: '',
-        email: '',
+export default function Edit({ user }) {
+    const { data, setData, put, processing, errors } = useForm({
+        name: user.name,
+        email: user.email,
         password: '',
         password_confirmation: '',
-        role: 'user',
+        role: user.role,
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route('users.store'));
+        put(route('users.update', user.id));
     };
 
     return (
-        <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Create User</h2>}>
-            <Head title="Create User" />
+        <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Edit User</h2>}>
+            <Head title={`Edit User - ${user.name}`} />
 
             <div className="py-9">
                 <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
@@ -28,7 +28,7 @@ export default function Create() {
                             </Link>
                         </div>
 
-                        <h1 className="mb-6 text-lg font-bold">Add New User</h1>
+                        <h1 className="mb-6 text-lg font-bold">Edit User: {user.name}</h1>
 
                         <form onSubmit={handleSubmit} className="max-w-lg">
                             <Field label="Full Name" error={errors.name}>
@@ -50,7 +50,7 @@ export default function Create() {
                                 />
                             </Field>
 
-                            <Field label="Password" error={errors.password}>
+                            <Field label="Password (leave blank to keep current)" error={errors.password}>
                                 <input
                                     type="password"
                                     className={`w-full rounded-lg border px-3 py-2 text-sm outline-none ${errors.password ? 'border-red-400' : 'border-gray-200'}`}
@@ -88,7 +88,7 @@ export default function Create() {
                                     disabled={processing}
                                     className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-400"
                                 >
-                                    {processing ? 'Saving...' : 'Create User'}
+                                    {processing ? 'Saving...' : 'Update User'}
                                 </button>
                                 <Link href={route('admin.index')} className="text-sm text-gray-400 hover:text-gray-600">
                                     Cancel

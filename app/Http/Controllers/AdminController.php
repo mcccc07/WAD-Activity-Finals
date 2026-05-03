@@ -20,9 +20,40 @@ class AdminController extends Controller
     {
         return Inertia::render('Admin/Create');
     }
-    public function edit()
+    public function show(User $user)
     {
-        return Inertia::render('Admin/Edit');
+        return Inertia::render('Admin/Show', [
+            'user' => $user
+        ]);
+    }
+    public function edit(User $user)
+    {
+        return Inertia::render('Admin/Edit', [
+            'user' => $user
+        ]);
+    }
+    public function update(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|min:1|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
+            'role' => 'required|in:user,seller,admin',
+        ]);
+
+        $data = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $validated['role'],
+        ];
+
+        if (!empty($validated['password'])) {
+            $data['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($data);
+
+        return redirect()->route('admin.index')->with('success', 'User updated successfully.');
     }
     public function store(Request $request)
     {
@@ -30,7 +61,7 @@ class AdminController extends Controller
             'name' => 'required|string|min:1|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:user,admin',
+            'role' => 'required|in:user,seller,admin',
         ]);
 
         User::create([

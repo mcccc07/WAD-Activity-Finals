@@ -1,8 +1,28 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
+import { useState } from 'react';
+import Modal from '@/Components/Modal';
 
 export default function Dashboard() {
     const { users } = usePage().props;
+    const [userToDelete, setUserToDelete] = useState(null);
+
+    const confirmUserDeletion = (user) => {
+        setUserToDelete(user);
+    };
+
+    const deleteUser = () => {
+        if (userToDelete) {
+            router.delete(route('users.destroy', userToDelete.id), {
+                preserveScroll: true,
+                onSuccess: () => closeModal(),
+            });
+        }
+    };
+
+    const closeModal = () => {
+        setUserToDelete(null);
+    };
 
     return (
         <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Admin Dashboard</h2>}>
@@ -28,6 +48,7 @@ export default function Dashboard() {
                                     <th className="border px-4 py-2">Full Name</th>
                                     <th className="border px-4 py-2">Email</th>
                                     <th className="border px-4 py-2">Role</th>
+                                    <th className="border px-4 py-2 text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -46,11 +67,34 @@ export default function Dashboard() {
                                                     {user.role}
                                                 </span>
                                             </td>
+                                            <td className="border px-4 py-2 text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <Link
+                                                        href={route('users.show', user.id)}
+                                                        className="rounded bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200 transition-colors"
+                                                    >
+                                                        View
+                                                    </Link>
+                                                    <Link
+                                                        href={route('users.edit', user.id)}
+                                                        className="rounded bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700 hover:bg-yellow-200 transition-colors"
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => confirmUserDeletion(user)}
+                                                        className="rounded bg-red-100 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-200 transition-colors"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="4" className="border px-4 py-2 text-center text-gray-500">
+                                        <td colSpan="5" className="border px-4 py-2 text-center text-gray-500">
                                             No users found.
                                         </td>
                                     </tr>
@@ -94,6 +138,41 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
+
+            <Modal show={userToDelete !== null} onClose={closeModal} maxWidth="md">
+                <div className="p-6">
+                    <h2 className="text-lg font-medium text-gray-900">
+                        Are you sure you want to delete this user?
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-600">
+                        Once the user is deleted, all of their resources and data will be permanently deleted.
+                        {userToDelete && (
+                            <span className="block mt-4 rounded-md bg-gray-50 p-3 text-sm text-gray-800 border border-gray-200">
+                                <span className="font-semibold block">{userToDelete.name}</span>
+                                <span className="text-gray-500">{userToDelete.email}</span>
+                            </span>
+                        )}
+                    </p>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={closeModal}
+                            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={deleteUser}
+                            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                        >
+                            Delete User
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </AuthenticatedLayout>
     );
 }
