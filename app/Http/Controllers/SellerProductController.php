@@ -15,8 +15,12 @@ class SellerProductController extends Controller
      */
     public function index()
     {
-        $seller = Seller::where('user_id', Auth::id())->firstOrFail();
+        $seller = Seller::where('user_id', Auth::id())->first();
         
+        if (!$seller) {
+            return redirect()->route('seller.create')->with('error', 'Please create your seller profile first to start adding products.');
+        }
+
         $products = $seller->products()->latest()->paginate(10);
         
         return Inertia::render('Seller/Products/Index', [
@@ -43,7 +47,10 @@ class SellerProductController extends Controller
             'stock' => 'required|integer|min:0',
         ]);
 
-        $seller = Seller::where('user_id', Auth::id())->firstOrFail();
+        $seller = Seller::where('user_id', Auth::id())->first();
+        if (!$seller) {
+            return redirect()->route('seller.create')->with('error', 'Please create your seller profile first.');
+        }
 
         // Create the base product
         $product = Product::create([
@@ -66,7 +73,10 @@ class SellerProductController extends Controller
      */
     public function edit(Product $product)
     {
-        $seller = Seller::where('user_id', Auth::id())->firstOrFail();
+        $seller = Seller::where('user_id', Auth::id())->first();
+        if (!$seller) {
+            return redirect()->route('seller.create');
+        }
         
         // Ensure the product belongs to this seller
         if (!$seller->products()->where('product_id', $product->id)->exists()) {
@@ -92,7 +102,10 @@ class SellerProductController extends Controller
             'stock' => 'required|integer|min:0',
         ]);
 
-        $seller = Seller::where('user_id', Auth::id())->firstOrFail();
+        $seller = Seller::where('user_id', Auth::id())->first();
+        if (!$seller) {
+            return redirect()->route('seller.create');
+        }
 
         // Ensure the product belongs to this seller
         if (!$seller->products()->where('product_id', $product->id)->exists()) {
@@ -120,7 +133,10 @@ class SellerProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        $seller = Seller::where('user_id', Auth::id())->firstOrFail();
+        $seller = Seller::where('user_id', Auth::id())->first();
+        if (!$seller) {
+            return redirect()->route('seller.create');
+        }
 
         // Ensure the product belongs to this seller
         if (!$seller->products()->where('product_id', $product->id)->exists()) {

@@ -8,10 +8,26 @@ class Order extends Model
 {
     protected $table = 'order';
 
-    public function seller(){
+    protected $fillable = [
+        'user_id',
+        'seller_id',
+        'product_name',
+        'total_price',
+        'status',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function seller()
+    {
         return $this->belongsTo(Seller::class);
     }
-    public function items(){
+
+    public function items()
+    {
         return $this->hasMany(OrderItem::class);
     }
 }

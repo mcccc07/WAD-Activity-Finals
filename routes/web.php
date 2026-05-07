@@ -5,6 +5,9 @@ use App\Http\Controllers\SellerController;
 use App\Http\Controllers\SellerProductController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Settings\ProfileController as SettingsProfileController;
 use App\Http\Controllers\Settings\PasswordController as SettingsPasswordController;
 use App\Http\Middleware\AdminMiddleware;
@@ -64,7 +67,22 @@ Route::middleware('auth')->group(function () {
                 $sellerProducts = $seller->products()->take(5)->get();
             }
         } else if ($user->role === 'user') {
-            $availableProducts = App\Models\Product::with('sellers')->whereHas('sellers')->latest()->get();
+            $availableProducts = App\Models\Product::with(['sellers', 'reviews'])
+                ->whereHas('sellers')
+                ->latest()
+                ->get()
+                ->map(function ($product) use ($user) {
+                    $seller = $product->sellers->first();
+                    $userReview = $product->reviews->firstWhere('user_id', $user->id);
+                    return [
+                        'id'          => $product->id,
+                        'name'        => $product->name,
+                        'sellers'     => $product->sellers,
+                        'avg_rating'  => $product->reviews->avg('rating'),
+                        'review_count'=> $product->reviews->count(),
+                        'user_review' => $userReview ? ['rating' => $userReview->rating, 'comment' => $userReview->comment] : null,
+                    ];
+                });
         }
 
         return Inertia::render('User/Dashboard', [
@@ -85,6 +103,23 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/settings/password', [SettingsPasswordController::class, 'edit'])->name('settings.password.edit');
     Route::put('/settings/password', [SettingsPasswordController::class, 'update'])->name('settings.password.update');
+
+    // Cart Routes
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+    Route::patch('/cart/{productId}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/{productId}', [CartController::class, 'destroy'])->name('cart.destroy');
+    Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
+
+    // Checkout Routes
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('/order/success', function () {
+        return Inertia::render('User/OrderSuccess');
+    })->name('order.success');
+
+    // Review Route
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
     // Seller Registration Routes
     Route::get('/seller/create', [SellerController::class, 'create'])->name('seller.create');
