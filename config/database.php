@@ -94,7 +94,10 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'require',
+            'options' => [
+                1006 => storage_path('app/certs/ca.pem'),
+            ],
         ],
 
         'sqlsrv' => [
