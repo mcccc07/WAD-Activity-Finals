@@ -32,5 +32,6 @@ class AppServiceProvider extends ServiceProvider
                 \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT |
                 \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO
             );
+        }
     }
 }
