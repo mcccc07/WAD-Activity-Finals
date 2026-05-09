@@ -1,7 +1,9 @@
 [phases.build]
 cmds = [
   "composer install --no-dev --optimize-autoloader",
-  "chmod -R 777 storage bootstrap/cache"
+  "chmod -R 777 storage bootstrap/cache",
+  "cp start.sh /start-container.sh",
+  "chmod +x /start-container.sh"
 ]
 
 [start]
