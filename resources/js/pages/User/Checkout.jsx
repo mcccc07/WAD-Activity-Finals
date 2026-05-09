@@ -25,9 +25,7 @@ export default function Checkout({ cartItems, total }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         address: '',
-        card_number: '',
-        expiry: '',
-        cvv: '',
+        payment_method: 'cod',
     });
 
     const handleSubmit = (e) => {
@@ -76,67 +74,53 @@ export default function Checkout({ cartItems, total }) {
                                     <h3 className="text-base font-bold text-gray-900">Payment Details</h3>
                                 </div>
 
-                                {/* Card preview */}
-                                <div className="mb-5 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-5 text-white shadow-lg">
-                                    <div className="flex justify-between items-start mb-8">
-                                        <div className="flex items-center gap-1">
-                                            <div className="w-7 h-7 bg-yellow-400 rounded-full opacity-90"/>
-                                            <div className="w-7 h-7 bg-orange-400 rounded-full -ml-3 opacity-90"/>
+                                <div className="space-y-3">
+                                    <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${data.payment_method === 'cod' ? 'border-indigo-600 bg-indigo-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                        <input
+                                            type="radio"
+                                            name="payment_method"
+                                            value="cod"
+                                            checked={data.payment_method === 'cod'}
+                                            onChange={(e) => setData('payment_method', e.target.value)}
+                                            className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-600"
+                                        />
+                                        <div className="ml-3">
+                                            <span className="block text-sm font-medium text-gray-900">Cash on Delivery</span>
+                                            <span className="block text-sm text-gray-500">Pay when you receive the item.</span>
                                         </div>
-                                        <span className="text-xs font-semibold tracking-widest opacity-80">DEMO CARD</span>
-                                    </div>
-                                    <div className="text-lg font-mono tracking-widest mb-4 opacity-90">
-                                        {data.card_number ? data.card_number.replace(/(.{4})/g, '$1 ').trim() : '•••• •••• •••• ••••'}
-                                    </div>
-                                    <div className="flex justify-between text-xs">
-                                        <div>
-                                            <p className="opacity-60 mb-0.5">CARD HOLDER</p>
-                                            <p className="font-semibold">{data.name || 'Your Name'}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="opacity-60 mb-0.5">EXPIRES</p>
-                                            <p className="font-semibold">{data.expiry || 'MM/YY'}</p>
-                                        </div>
-                                    </div>
-                                </div>
+                                    </label>
 
-                                <div className="space-y-4">
-                                    <InputField
-                                        id="card_number"
-                                        label="Card Number"
-                                        placeholder="1234567890123456"
-                                        value={data.card_number}
-                                        onChange={(e) => setData('card_number', e.target.value.replace(/\D/g, '').slice(0, 16))}
-                                        maxLength={16}
-                                        inputMode="numeric"
-                                        error={errors.card_number}
-                                    />
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <InputField
-                                            id="expiry"
-                                            label="Expiry (MM/YY)"
-                                            placeholder="12/28"
-                                            value={data.expiry}
-                                            onChange={(e) => {
-                                                let v = e.target.value.replace(/\D/g, '').slice(0, 4);
-                                                if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
-                                                setData('expiry', v);
-                                            }}
-                                            maxLength={5}
-                                            error={errors.expiry}
+                                    <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${data.payment_method === 'gcash' ? 'border-indigo-600 bg-indigo-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                        <input
+                                            type="radio"
+                                            name="payment_method"
+                                            value="gcash"
+                                            checked={data.payment_method === 'gcash'}
+                                            onChange={(e) => setData('payment_method', e.target.value)}
+                                            className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-600"
                                         />
-                                        <InputField
-                                            id="cvv"
-                                            label="CVV"
-                                            placeholder="123"
-                                            value={data.cvv}
-                                            onChange={(e) => setData('cvv', e.target.value.replace(/\D/g, '').slice(0, 4))}
-                                            maxLength={4}
-                                            inputMode="numeric"
-                                            error={errors.cvv}
+                                        <div className="ml-3">
+                                            <span className="block text-sm font-medium text-gray-900">GCash</span>
+                                            <span className="block text-sm text-gray-500">Pay using your GCash account.</span>
+                                        </div>
+                                    </label>
+
+                                    <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${data.payment_method === 'bank' ? 'border-indigo-600 bg-indigo-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                        <input
+                                            type="radio"
+                                            name="payment_method"
+                                            value="bank"
+                                            checked={data.payment_method === 'bank'}
+                                            onChange={(e) => setData('payment_method', e.target.value)}
+                                            className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-600"
                                         />
-                                    </div>
+                                        <div className="ml-3">
+                                            <span className="block text-sm font-medium text-gray-900">Bank Transfer</span>
+                                            <span className="block text-sm text-gray-500">Direct transfer from your bank account.</span>
+                                        </div>
+                                    </label>
                                 </div>
+                                {errors.payment_method && <p className="mt-2 text-xs text-red-600">{errors.payment_method}</p>}
                             </div>
                         </div>
 

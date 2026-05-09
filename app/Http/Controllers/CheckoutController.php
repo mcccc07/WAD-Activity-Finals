@@ -37,11 +37,9 @@ class CheckoutController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'address'     => 'required|string|max:500',
-            'card_number' => 'required|string|size:16',
-            'expiry'      => 'required|string',
-            'cvv'         => 'required|string|min:3|max:4',
+            'name'           => 'required|string|max:255',
+            'address'        => 'required|string|max:500',
+            'payment_method' => 'required|string|in:cod,gcash,bank',
         ]);
 
         $cart = session()->get('cart', []);
