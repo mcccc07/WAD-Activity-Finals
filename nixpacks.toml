@@ -4,8 +4,6 @@ nixPkgs = ["php82", "php82Extensions.pdo", "php82Extensions.pdo_sqlite", "php82E
 [phases.build]
 cmds = [
   "composer install --no-dev --optimize-autoloader",
-  "npm install",
-  "npm run build",
   "touch database/database.sqlite",
   "php artisan key:generate --force",
   "php artisan config:cache",
