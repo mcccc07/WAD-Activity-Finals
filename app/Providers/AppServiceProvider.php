@@ -24,14 +24,9 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
 
         if (config('app.env') === 'production') {
-            URL::forceScheme('https');
-            \Illuminate\Support\Facades\Request::setTrustedProxies(
-                ['*'],
-                \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR |
-                \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST |
-                \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT |
-                \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO
-            );
+            Vite::prefetch(concurrency: 3);
+        URL::forceScheme('https');
+        URL::forceRootUrl('https://wad-activity-finals-production.up.railway.app');
         }
     }
 }
