@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Seller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate; 
 use Inertia\Inertia;
 
 class SellerProductController extends Controller
@@ -52,13 +53,12 @@ class SellerProductController extends Controller
             return redirect()->route('seller.create')->with('error', 'Please create your seller profile first.');
         }
 
-        // Create the base product
         $product = Product::create([
             'name' => $validated['name'],
             'price' => $validated['price'],
+            'user_id' => Auth::id(), 
         ]);
 
-        // Attach to seller with pivot data
         $seller->products()->attach($product->id, [
             'price' => $validated['price'],
             'stock' => $validated['stock'],
@@ -73,17 +73,14 @@ class SellerProductController extends Controller
      */
     public function edit(Product $product)
     {
+       
+        Gate::authorize('update', $product);
+
         $seller = Seller::where('user_id', Auth::id())->first();
         if (!$seller) {
             return redirect()->route('seller.create');
         }
-        
-        // Ensure the product belongs to this seller
-        if (!$seller->products()->where('product_id', $product->id)->exists()) {
-            abort(403, 'Unauthorized access');
-        }
 
-        // Get pivot data
         $productWithPivot = $seller->products()->where('product_id', $product->id)->first();
 
         return Inertia::render('Seller/Products/Edit', [
@@ -96,6 +93,9 @@ class SellerProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
+        
+        Gate::authorize('update', $product);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
@@ -103,22 +103,12 @@ class SellerProductController extends Controller
         ]);
 
         $seller = Seller::where('user_id', Auth::id())->first();
-        if (!$seller) {
-            return redirect()->route('seller.create');
-        }
-
-        // Ensure the product belongs to this seller
-        if (!$seller->products()->where('product_id', $product->id)->exists()) {
-            abort(403, 'Unauthorized access');
-        }
-
-        // Update base product
+        
         $product->update([
             'name' => $validated['name'],
             'price' => $validated['price'],
         ]);
 
-        // Update pivot table
         $seller->products()->updateExistingPivot($product->id, [
             'price' => $validated['price'],
             'stock' => $validated['stock'],
@@ -133,17 +123,9 @@ class SellerProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        $seller = Seller::where('user_id', Auth::id())->first();
-        if (!$seller) {
-            return redirect()->route('seller.create');
-        }
+        
+        Gate::authorize('delete', $product);
 
-        // Ensure the product belongs to this seller
-        if (!$seller->products()->where('product_id', $product->id)->exists()) {
-            abort(403, 'Unauthorized access');
-        }
-
-        // The product delete will cascade and delete the sellerproduct relation automatically
         $product->delete();
 
         return redirect()->route('seller.products.index')

@@ -3,19 +3,23 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rules\In;
 use App\Models\Seller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate; // Idinagdag ito
 use Inertia\Inertia;
 
 class SellerController extends Controller
 {
     public function index()
     {
+        // Check Gate: Admin lang ang pwedeng makakita ng listahan ng lahat ng sellers
+        Gate::authorize('isAdmin');
+
         return Inertia::render('Seller/Index', [
             'sellers' => Seller::latest()->paginate(10)
         ]);
     }
+
     public function create()
     {
         return Inertia::render('Seller/Create');
@@ -38,9 +42,9 @@ class SellerController extends Controller
 
     public function show(Seller $seller)
     {
-        if (Auth::id() !== $seller->user_id) {
-            abort(403, 'Unauthorized access');
-        }
+        // Gagamit na tayo ng Policy rito imbes na manual na 'if'
+        Gate::authorize('view', $seller);
+
         $seller->load(['products', 'orders.items']);
 
         return Inertia::render('Seller/Show', [

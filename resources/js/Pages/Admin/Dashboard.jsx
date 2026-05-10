@@ -4,11 +4,17 @@ import { useState } from 'react';
 import Modal from '@/Components/Modal';
 
 export default function Dashboard() {
-    const { users } = usePage().props;
+    
+    const { users, allProducts } = usePage().props;
     const [userToDelete, setUserToDelete] = useState(null);
+    const [productToDelete, setProductToDelete] = useState(null);
 
     const confirmUserDeletion = (user) => {
         setUserToDelete(user);
+    };
+
+    const confirmProductDeletion = (product) => {
+        setProductToDelete(product);
     };
 
     const deleteUser = () => {
@@ -20,17 +26,28 @@ export default function Dashboard() {
         }
     };
 
+    const deleteProduct = () => {
+        if (productToDelete) {
+            router.delete(route('seller.products.destroy', productToDelete.id), {
+                preserveScroll: true,
+                onSuccess: () => closeModal(),
+            });
+        }
+    };
+
     const closeModal = () => {
         setUserToDelete(null);
+        setProductToDelete(null);
     };
 
     return (
         <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Admin Dashboard</h2>}>
             <Head title="Admin Dashboard" />
 
-            <div className="py-12">
+            <div className="py-12 space-y-8">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
+                    {/* USER TABLE SECTION */}
+                    <div className="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg mb-8">
                         <div className="mb-4 flex items-center justify-between">
                             <h1 className="text-lg font-bold">User Table</h1>
                             <Link
@@ -102,111 +119,100 @@ export default function Dashboard() {
                             </tbody>
                         </table>
 
-                        {/* Pagination */}
-                        <div className="mt-6 mb-2 flex flex-col items-center justify-between sm:flex-row">
-                            <span className="text-sm text-gray-600 mb-4 sm:mb-0">
+                        {/* Pagination Section (Users) */}
+                        <div className="mt-6 flex flex-col items-center justify-between sm:flex-row">
+                            <span className="text-sm text-gray-600">
                                 Showing {users.from || 0} to {users.to || 0} of {users.total} users
                             </span>
-                            
                             {users.links && users.links.length > 3 && (
-                                <div className="flex">
-                                    <nav className="inline-flex items-center space-x-1 rounded-lg bg-white px-2 py-2 shadow-sm border border-gray-200">
-                                        {users.links.map((link, index) => {
-                                            let content = <span dangerouslySetInnerHTML={{ __html: link.label }} />;
-                                            
-                                            // Make arrows slightly larger/bolder to match the photo
-                                            if (link.label.includes('Previous')) {
-                                                content = (
-                                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-                                                    </svg>
-                                                );
-                                            } else if (link.label.includes('Next')) {
-                                                content = (
-                                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                );
-                                            } else if (link.label === '...') {
-                                                content = <span className="px-1">...</span>;
-                                            }
-
-                                            // Base classes for each item without joined borders
-                                            let baseClass = `flex items-center justify-center px-3 py-1.5 min-w-[2rem] text-sm font-medium rounded-md transition-colors focus:outline-none`;
-
-                                            if (link.active) {
-                                                // Active styling (border instead of fill, matching photo style)
-                                                return (
-                                                    <span key={index} aria-current="page" className={`z-10 border-2 border-gray-900 text-gray-900 ${baseClass}`}>
-                                                        {content}
-                                                    </span>
-                                                );
-                                            }
-
-                                            if (!link.url) {
-                                                // Disabled styling
-                                                return (
-                                                    <span key={index} className={`text-gray-400 cursor-not-allowed ${baseClass}`}>
-                                                        {content}
-                                                    </span>
-                                                );
-                                            }
-
-                                            // Default link styling
-                                            // Arrows can be styled slightly darker to match the strong arrows in the photo
-                                            const isArrow = link.label.includes('Previous') || link.label.includes('Next');
-                                            const textColor = isArrow ? 'text-gray-900' : 'text-gray-600';
-                                            
-                                            return (
-                                                <Link
-                                                    key={index}
-                                                    href={link.url}
-                                                    className={`${textColor} hover:bg-gray-100 hover:text-gray-900 ${baseClass}`}
-                                                    preserveScroll
-                                                >
-                                                    {content}
-                                                </Link>
-                                            );
-                                        })}
-                                    </nav>
+                                <div className="flex space-x-1">
+                                    {users.links.map((link, index) => (
+                                        <Link
+                                            key={index}
+                                            href={link.url || '#'}
+                                            className={`px-3 py-1 border rounded ${link.active ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'} ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    ))}
                                 </div>
                             )}
                         </div>
                     </div>
+
+                    {/* NEW: PRODUCT TABLE SECTION FOR ADMIN */}
+                    <div className="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
+                        <div className="mb-4">
+                            <h1 className="text-lg font-bold">All Sellers' Products</h1>
+                            <p className="text-sm text-gray-500">Monitor and manage all products across the platform.</p>
+                        </div>
+
+                        <table className="w-full border-collapse text-left">
+                            <thead>
+                                <tr className="bg-gray-50">
+                                    <th className="border px-4 py-2">ID</th>
+                                    <th className="border px-4 py-2">Product Name</th>
+                                    <th className="border px-4 py-2">Seller/Shop</th>
+                                    <th className="border px-4 py-2">Price</th>
+                                    <th className="border px-4 py-2 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {allProducts && allProducts.length > 0 ? (
+                                    allProducts.map((product) => (
+                                        <tr key={product.id} className="hover:bg-gray-50">
+                                            <td className="border px-4 py-2">{product.id}</td>
+                                            <td className="border px-4 py-2 font-medium">{product.name}</td>
+                                            <td className="border px-4 py-2 text-blue-600 italic">
+                                                {product.sellers && product.sellers.length > 0 
+                                                    ? product.sellers[0].shop_name 
+                                                    : 'N/A'}
+                                            </td>
+                                            <td className="border px-4 py-2">${product.price}</td>
+                                            <td className="border px-4 py-2 text-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => confirmProductDeletion(product)}
+                                                    className="rounded bg-red-100 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-200"
+                                                >
+                                                    Delete Product
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="border px-4 py-2 text-center text-gray-500">
+                                            No products found in the database.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
+            {/* Modal for User Deletion */}
             <Modal show={userToDelete !== null} onClose={closeModal} maxWidth="md">
                 <div className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900">
-                        Are you sure you want to delete this user?
-                    </h2>
+                    <h2 className="text-lg font-medium text-gray-900">Are you sure you want to delete this user?</h2>
+                    <div className="mt-4 flex justify-end gap-3">
+                        <button onClick={closeModal} className="px-4 py-2 bg-gray-200 rounded-lg">Cancel</button>
+                        <button onClick={deleteUser} className="px-4 py-2 bg-red-600 text-white rounded-lg">Delete User</button>
+                    </div>
+                </div>
+            </Modal>
 
-                    <p className="mt-1 text-sm text-gray-600">
-                        Once the user is deleted, all of their resources and data will be permanently deleted.
-                        {userToDelete && (
-                            <span className="block mt-4 rounded-md bg-gray-50 p-3 text-sm text-gray-800 border border-gray-200">
-                                <span className="font-semibold block">{userToDelete.name}</span>
-                                <span className="text-gray-500">{userToDelete.email}</span>
-                            </span>
-                        )}
+            {/* Modal for Product Deletion */}
+            <Modal show={productToDelete !== null} onClose={closeModal} maxWidth="md">
+                <div className="p-6">
+                    <h2 className="text-lg font-medium text-gray-900 text-red-600">Delete Product?</h2>
+                    <p className="mt-2 text-sm text-gray-600">
+                        Warning: This will permanently remove <b>{productToDelete?.name}</b> from the shop.
                     </p>
-
                     <div className="mt-6 flex justify-end gap-3">
-                        <button
-                            type="button"
-                            onClick={closeModal}
-                            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            onClick={deleteUser}
-                            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-                        >
-                            Delete User
-                        </button>
+                        <button onClick={closeModal} className="px-4 py-2 bg-gray-200 rounded-lg">Cancel</button>
+                        <button onClick={deleteProduct} className="px-4 py-2 bg-red-600 text-white rounded-lg">Confirm Delete</button>
                     </div>
                 </div>
             </Modal>

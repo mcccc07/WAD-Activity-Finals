@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Seller;
+use App\Models\Product; // Idinagdag ito
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -13,9 +15,13 @@ class AdminController extends Controller
     public function index()
     {
         return Inertia::render('Admin/Dashboard', [
-            'users' => User::orderBy('id', 'asc')->paginate(10)->onEachSide(1)
+            'users' => User::orderBy('id', 'asc')->paginate(10)->onEachSide(1),
+            
+            'allProducts' => Product::with('sellers')->latest()->get() 
         ]);
     }
+
+    
     public function create()
     {
         return Inertia::render('Admin/Create');
@@ -85,8 +91,7 @@ class AdminController extends Controller
 
     public function sellerRequests()
     {
-        // Get all unapproved seller profiles with their associated user
-        $requests = \App\Models\Seller::with('user')
+        $requests = Seller::with('user')
             ->where('is_approved', false)
             ->latest()
             ->paginate(10);
@@ -96,13 +101,10 @@ class AdminController extends Controller
         ]);
     }
 
-    public function approveSeller(Request $request, \App\Models\Seller $seller)
+    public function approveSeller(Request $request, Seller $seller)
     {
         $seller->update(['is_approved' => true]);
-        
-        // Update user role to seller
         $seller->user->update(['role' => 'seller']);
-        
         return redirect()->back()->with('success', 'Seller request approved successfully.');
     }
 }
