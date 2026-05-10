@@ -111,7 +111,7 @@ To run our application, please ensure the following are installed:
 # Git Workflow
 To Save and Push Work
   - git add .
-  - git commit -m "Update: Added Authorization Policies and Admin Dashboard"
+  - git commit -m "Your message here"
   - git push origin main
 
 To Get Latest Changes
