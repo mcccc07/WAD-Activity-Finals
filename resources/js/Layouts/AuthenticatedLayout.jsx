@@ -68,9 +68,14 @@ export default function AuthenticatedLayout({ header, children }) {
             <div className="flex flex-1 flex-col overflow-y-auto bg-white overflow-x-hidden">
                 <nav className="flex-1 space-y-2 px-3 py-6">
                     {user.role === 'admin' && (
-                        <NavItem href={route('admin.index')} active={route().current('admin.index')} icon={icons.dashboard} collapsed={collapsed}>
-                            Dashboard
-                        </NavItem>
+                        <>
+                            <NavItem href={route('admin.index')} active={route().current('admin.index')} icon={icons.dashboard} collapsed={collapsed}>
+                                Dashboard
+                            </NavItem>
+                            <NavItem href={route('admin.seller_requests')} active={route().current('admin.seller_requests')} icon={icons.seller} collapsed={collapsed}>
+                                Seller Requests
+                            </NavItem>
+                        </>
                     )}
                     {user.role === 'seller' && (
                         <>
@@ -86,6 +91,9 @@ export default function AuthenticatedLayout({ header, children }) {
                         <>
                             <NavItem href={route('dashboard')} active={route().current('dashboard')} icon={icons.dashboard} collapsed={collapsed}>
                                 Dashboard
+                            </NavItem>
+                            <NavItem href={route('orders.index')} active={route().current('orders.*')} icon={icons.dashboard} collapsed={collapsed}>
+                                My Orders
                             </NavItem>
                             <Link
                                 href={route('cart.index')}

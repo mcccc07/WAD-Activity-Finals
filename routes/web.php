@@ -54,6 +54,7 @@ Route::middleware('auth')->group(function () {
 
         $sellerStats = null;
         $sellerProducts = null;
+        $sellerOrders = null;
         $availableProducts = null;
 
         if ($user->role === 'seller') {
@@ -65,6 +66,7 @@ Route::middleware('auth')->group(function () {
                     'orders_scheduled' => $seller->orders()->where('status', 'scheduled_for_ship_out')->count(),
                 ];
                 $sellerProducts = $seller->products()->take(5)->get();
+                $sellerOrders = $seller->orders()->with('user')->latest()->take(10)->get();
             }
         } else if ($user->role === 'user') {
             $availableProducts = App\Models\Product::with(['sellers', 'reviews'])
@@ -88,6 +90,7 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('User/Dashboard', [
             'sellerStats' => $sellerStats,
             'sellerProducts' => $sellerProducts,
+            'sellerOrders' => $sellerOrders,
             'availableProducts' => $availableProducts
         ]);
     })->name('dashboard');
@@ -121,6 +124,11 @@ Route::middleware('auth')->group(function () {
     // Review Route
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
+    // Order Routes
+    Route::get('/orders', [App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
+    Route::patch('/orders/{order}/confirm-delivery', [App\Http\Controllers\OrderController::class, 'confirmDelivery'])->name('orders.confirm_delivery');
+    Route::patch('/orders/{order}/status', [App\Http\Controllers\OrderController::class, 'updateStatus'])->name('orders.update_status');
+
     // Seller Registration Routes
     Route::get('/seller/create', [SellerController::class, 'create'])->name('seller.create');
     Route::post('/seller', [SellerController::class, 'store'])->name('seller.store');
@@ -138,6 +146,8 @@ Route::middleware('auth')->group(function () {
     // Admin Routes
     Route::middleware(AdminMiddleware::class)->group(function () {
         Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.index');
+        Route::get('/admin/seller-requests', [AdminController::class, 'sellerRequests'])->name('admin.seller_requests');
+        Route::patch('/admin/seller-requests/{seller}/approve', [AdminController::class, 'approveSeller'])->name('admin.approve_seller');
 
         // Admin user management - points to AdminController
         Route::get('/admin/users/create', [AdminController::class, 'create'])->name('users.create');

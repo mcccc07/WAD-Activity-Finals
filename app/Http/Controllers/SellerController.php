@@ -33,9 +33,7 @@ class SellerController extends Controller
         
         Seller::create($validate);
         
-        $user->update(['role' => 'seller']);
-        
-        return redirect()->route('dashboard')->with('success', 'Seller profile created successfully.');
+        return redirect()->route('dashboard')->with('success', 'Your request to become a seller has been submitted and is pending admin approval.');
     }
 
     public function show(Seller $seller)

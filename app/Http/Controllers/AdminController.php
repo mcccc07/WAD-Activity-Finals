@@ -82,4 +82,27 @@ class AdminController extends Controller
         $user->delete();
         return redirect()->route('admin.index')->with('success', 'User deleted successfully.');
     }
+
+    public function sellerRequests()
+    {
+        // Get all unapproved seller profiles with their associated user
+        $requests = \App\Models\Seller::with('user')
+            ->where('is_approved', false)
+            ->latest()
+            ->paginate(10);
+            
+        return Inertia::render('Admin/SellerRequests', [
+            'requests' => $requests
+        ]);
+    }
+
+    public function approveSeller(Request $request, \App\Models\Seller $seller)
+    {
+        $seller->update(['is_approved' => true]);
+        
+        // Update user role to seller
+        $seller->user->update(['role' => 'seller']);
+        
+        return redirect()->back()->with('success', 'Seller request approved successfully.');
+    }
 }

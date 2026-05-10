@@ -58,7 +58,7 @@ function StarRating({ productId, initialRating = 0, avgRating = 0, reviewCount =
     );
 }
 
-export default function Dashboard({ sellerStats, sellerProducts, availableProducts }) {
+export default function Dashboard({ sellerStats, sellerProducts, sellerOrders, availableProducts }) {
     const { auth, flash } = usePage().props;
     const user = auth.user;
     const [toast, setToast] = useState(flash?.success ? { message: flash.success, type: 'success' } : null);
@@ -70,6 +70,13 @@ export default function Dashboard({ sellerStats, sellerProducts, availableProduc
             preserveScroll: true,
             onSuccess: () => { setToast({ message: `"${product.name}" added to cart!`, type: 'success' }); setLoadingId(null); },
             onError: () => { setToast({ message: 'Failed to add to cart.', type: 'error' }); setLoadingId(null); },
+        });
+    };
+
+    const updateOrderStatus = (orderId, newStatus) => {
+        router.patch(route('orders.update_status', orderId), { status: newStatus }, {
+            preserveScroll: true,
+            onSuccess: () => setToast({ message: 'Order status updated successfully!', type: 'success' }),
         });
     };
 
@@ -109,41 +116,90 @@ export default function Dashboard({ sellerStats, sellerProducts, availableProduc
                     )}
 
                     {user.role === 'seller' && sellerProducts && (
-                        <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                            <div className="p-6 border-b border-gray-200">
-                                <h3 className="text-lg font-medium text-gray-900 mb-4">Your Recent Products</h3>
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {sellerProducts.length > 0 ? sellerProducts.map((product) => {
-                                                const stock = product.pivot?.stock || 0;
-                                                const price = product.pivot?.price || product.price;
-                                                let statusColor = 'bg-red-100 text-red-800', statusText = 'Out of Stock';
-                                                if (stock > 20) { statusColor = 'bg-green-100 text-green-800'; statusText = 'High Stock'; }
-                                                else if (stock > 0) { statusColor = 'bg-yellow-100 text-yellow-800'; statusText = 'Low Stock'; }
-                                                return (
-                                                    <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${parseFloat(price).toFixed(2)}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{stock}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor}`}>{statusText}</span></td>
-                                                    </tr>
-                                                );
-                                            }) : (
-                                                <tr><td colSpan="4" className="px-6 py-4 text-sm text-gray-500 text-center">No products found.</td></tr>
-                                            )}
-                                        </tbody>
-                                    </table>
+                        <div className="space-y-8">
+                            <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                                <div className="p-6 border-b border-gray-200">
+                                    <h3 className="text-lg font-medium text-gray-900 mb-4">Your Recent Products</h3>
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {sellerProducts.length > 0 ? sellerProducts.map((product) => {
+                                                    const stock = product.pivot?.stock || 0;
+                                                    const price = product.pivot?.price || product.price;
+                                                    let statusColor = 'bg-red-100 text-red-800', statusText = 'Out of Stock';
+                                                    if (stock > 20) { statusColor = 'bg-green-100 text-green-800'; statusText = 'High Stock'; }
+                                                    else if (stock > 0) { statusColor = 'bg-yellow-100 text-yellow-800'; statusText = 'Low Stock'; }
+                                                    return (
+                                                        <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${parseFloat(price).toFixed(2)}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{stock}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor}`}>{statusText}</span></td>
+                                                        </tr>
+                                                    );
+                                                }) : (
+                                                    <tr><td colSpan="4" className="px-6 py-4 text-sm text-gray-500 text-center">No products found.</td></tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
+
+                            {sellerOrders && (
+                                <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                                    <div className="p-6 border-b border-gray-200">
+                                        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Orders to Fulfill</h3>
+                                        <div className="overflow-x-auto">
+                                            <table className="min-w-full divide-y divide-gray-200">
+                                                <thead className="bg-gray-50">
+                                                    <tr>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Update Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="bg-white divide-y divide-gray-200">
+                                                    {sellerOrders.length > 0 ? sellerOrders.map((order) => (
+                                                        <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{order.id}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.user?.name || 'Unknown'}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${parseFloat(order.total_price).toFixed(2)}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                                {order.status === 'delivered' ? (
+                                                                    <span className="text-green-600 font-medium">Delivered</span>
+                                                                ) : (
+                                                                    <select
+                                                                        value={order.status}
+                                                                        onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                                                                        className="mt-1 block w-full py-1.5 pl-3 pr-8 text-sm border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                                    >
+                                                                        <option value="pending">Pending</option>
+                                                                        <option value="packing">Packing</option>
+                                                                        <option value="in_delivery">In Delivery</option>
+                                                                        <option value="out_for_delivery">Out for Delivery</option>
+                                                                    </select>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    )) : (
+                                                        <tr><td colSpan="4" className="px-6 py-4 text-sm text-gray-500 text-center">No recent orders.</td></tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
