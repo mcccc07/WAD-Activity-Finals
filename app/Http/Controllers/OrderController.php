@@ -11,6 +11,11 @@ class OrderController extends Controller
 {
     public function index()
     {
+        // Mark all unnotified orders as notified when the user views the page
+        Order::where('user_id', Auth::id())
+             ->where('is_notified', false)
+             ->update(['is_notified' => true]);
+
         $orders = Order::with(['items.product.reviews' => function($query) {
             $query->where('user_id', Auth::id());
         }, 'seller'])
@@ -29,7 +34,10 @@ class OrderController extends Controller
             'status' => 'required|in:packing,in_delivery,out_for_delivery,delivered',
         ]);
 
-        $order->update(['status' => $request->status]);
+        $order->update([
+            'status' => $request->status,
+            'is_notified' => false,
+        ]);
 
         return redirect()->back()->with('success', 'Order status updated successfully.');
     }

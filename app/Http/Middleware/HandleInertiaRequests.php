@@ -40,6 +40,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => session()->get('error'),
             ],
             'cartCount' => fn() => count(session()->get('cart', [])),
+            'unnotifiedOrdersCount' => fn() => $request->user() ? \App\Models\Order::where('user_id', $request->user()->id)->where('is_notified', false)->count() : 0,
             'ziggy' => fn() => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

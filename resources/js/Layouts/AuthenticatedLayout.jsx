@@ -5,6 +5,7 @@ import { useState } from 'react';
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
     const cartCount = usePage().props.cartCount ?? 0;
+    const unnotifiedOrdersCount = usePage().props.unnotifiedOrdersCount ?? 0;
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -41,7 +42,7 @@ export default function AuthenticatedLayout({ header, children }) {
         )
     };
 
-    const NavItem = ({ href, active, icon, children, collapsed }) => (
+    const NavItem = ({ href, active, icon, children, collapsed, badge }) => (
         <Link
             href={href}
             className={`flex items-center py-3 text-sm font-medium rounded-xl transition-all duration-200 group ${
@@ -53,8 +54,26 @@ export default function AuthenticatedLayout({ header, children }) {
             }`}
             title={collapsed ? children : undefined}
         >
-            {icon && <span className={`flex-shrink-0 ${collapsed ? '' : 'mr-3'}`}>{icon}</span>}
-            {!collapsed && <span className="truncate">{children}</span>}
+            {icon && (
+                <span className={`flex-shrink-0 relative ${collapsed ? '' : 'mr-3'}`}>
+                    {icon}
+                    {badge > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-0.5 shadow-sm border border-white">
+                            {badge > 9 ? '9+' : badge}
+                        </span>
+                    )}
+                </span>
+            )}
+            {!collapsed && (
+                <span className="truncate flex items-center">
+                    {children}
+                    {badge > 0 && (
+                        <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                            {badge}
+                        </span>
+                    )}
+                </span>
+            )}
         </Link>
     );
 
@@ -92,7 +111,7 @@ export default function AuthenticatedLayout({ header, children }) {
                             <NavItem href={route('dashboard')} active={route().current('dashboard')} icon={icons.dashboard} collapsed={collapsed}>
                                 Dashboard
                             </NavItem>
-                            <NavItem href={route('orders.index')} active={route().current('orders.*')} icon={icons.dashboard} collapsed={collapsed}>
+                            <NavItem href={route('orders.index')} active={route().current('orders.*')} icon={icons.dashboard} collapsed={collapsed} badge={unnotifiedOrdersCount}>
                                 My Orders
                             </NavItem>
                             <Link
