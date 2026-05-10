@@ -181,11 +181,11 @@ function OrderCard({ order, steps, getProgressIndex, confirmDelivery }) {
                 )}
             </div>
 
-            {/* Review section if delivered and NOT reviewed yet */}
-            {order.status === 'delivered' && order.items && order.items.length > 0 && !isReviewed && (
+            {/* Review section if delivered */}
+            {order.status === 'delivered' && order.items && order.items.length > 0 && (
                 <div className="mt-4 border-t border-gray-100 pt-4 bg-indigo-50/30 -mx-6 -mb-6 p-6 rounded-b-lg">
-                    <h4 className="font-semibold text-gray-900 mb-2">Review your purchase</h4>
-                    <p className="text-sm text-gray-600 mb-4">How was the product? Your feedback helps other shoppers.</p>
+                    <h4 className="font-semibold text-gray-900 mb-2">{isReviewed ? 'Your Review' : 'Review your purchase'}</h4>
+                    {!isReviewed && <p className="text-sm text-gray-600 mb-4">How was the product? Your feedback helps other shoppers.</p>}
                     <StarRating productId={order.items[0].product_id} initialRating={order.items[0].product?.reviews?.[0]?.rating || 0} />
                 </div>
             )}
