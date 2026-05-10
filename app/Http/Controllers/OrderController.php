@@ -11,7 +11,9 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::with(['items.product', 'seller'])
+        $orders = Order::with(['items.product.reviews' => function($query) {
+            $query->where('user_id', Auth::id());
+        }, 'seller'])
             ->where('user_id', Auth::id())
             ->latest()
             ->get();

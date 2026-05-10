@@ -59,6 +59,140 @@ function StarRating({ productId, initialRating = 0 }) {
     );
 }
 
+function OrderCard({ order, steps, getProgressIndex, confirmDelivery }) {
+    const isReviewed = order.status === 'delivered' && order.items?.some(item => item.product?.reviews?.length > 0);
+    const [showDetails, setShowDetails] = useState(!isReviewed);
+    const currentStepIndex = getProgressIndex(order.status);
+
+    const handleBuyAgain = (productId) => {
+        router.post(route('cart.store'), { product_id: productId }, {
+            preserveScroll: true,
+            onSuccess: () => alert('Product added to cart!'),
+        });
+    };
+
+    if (isReviewed && !showDetails) {
+        return (
+            <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+                    {/* Placeholder for image */}
+                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center shrink-0">
+                        <svg className="w-8 h-8 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                        <h3 className="text-lg font-bold text-gray-900">{order.items?.[0]?.product?.name || 'Product'}</h3>
+                        <p className="text-sm text-gray-500">Order #{order.id} • Delivered</p>
+                    </div>
+                </div>
+                <div className="flex flex-wrap sm:flex-nowrap gap-2 shrink-0">
+                    <button 
+                        onClick={() => setShowDetails(true)}
+                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors w-full sm:w-auto"
+                    >
+                        View Details
+                    </button>
+                    {order.items?.[0]?.product?.id && (
+                        <button 
+                            onClick={() => handleBuyAgain(order.items[0].product.id)}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors w-full sm:w-auto flex items-center justify-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            Buy Again
+                        </button>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-6 relative">
+            {isReviewed && showDetails && (
+                <button 
+                    onClick={() => setShowDetails(false)}
+                    className="absolute top-6 right-6 text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center gap-1"
+                >
+                    Hide Details <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                </button>
+            )}
+            
+            <div className={`flex justify-between items-center mb-4 border-b border-gray-100 pb-4 ${isReviewed && showDetails ? 'mr-32' : ''}`}>
+                <div>
+                    <h3 className="text-lg font-bold text-gray-900">Order #{order.id}</h3>
+                    <p className="text-sm text-gray-500">{new Date(order.created_at).toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                    <p className="text-xl font-extrabold text-gray-900">${parseFloat(order.total_price).toFixed(2)}</p>
+                    <p className="text-sm font-medium text-indigo-600 uppercase">{order.status.replace(/_/g, ' ')}</p>
+                </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="py-6 mb-6">
+                <div className="relative">
+                    <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-100">
+                        <div style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500 transition-all duration-500"></div>
+                    </div>
+                    <div className="flex justify-between text-xs font-medium text-gray-500 absolute w-full" style={{ top: '15px' }}>
+                        {steps.map((step, index) => (
+                            <div key={step.id} className={`flex flex-col items-center ${index <= currentStepIndex ? 'text-indigo-600 font-bold' : ''}`} style={{ width: '20%', transform: index === 0 ? 'translateX(-40%)' : index === steps.length - 1 ? 'translateX(40%)' : 'none' }}>
+                                <span>{step.label}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+            
+            <div className="mt-12 space-y-4">
+                <h4 className="font-semibold text-gray-800">Items:</h4>
+                {order.items?.map(item => (
+                    <div key={item.id} className="flex justify-between items-center text-sm">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-md flex items-center justify-center text-indigo-200">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            <div>
+                                <p className="font-medium text-gray-900">{item.product?.name || 'Product deleted'}</p>
+                                <p className="text-gray-500">Qty: {item.quantity}</p>
+                            </div>
+                        </div>
+                        <span className="font-medium text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                ))}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-4 border-t border-gray-100 pt-6">
+                {order.status !== 'delivered' && (
+                    <button 
+                        onClick={() => confirmDelivery(order.id)}
+                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                    >
+                        Confirm Delivery
+                    </button>
+                )}
+                {isReviewed && order.items?.[0]?.product?.id && (
+                    <button 
+                        onClick={() => handleBuyAgain(order.items[0].product.id)}
+                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm flex items-center justify-center gap-2"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        Buy Again
+                    </button>
+                )}
+            </div>
+
+            {/* Review section if delivered and NOT reviewed yet */}
+            {order.status === 'delivered' && order.items && order.items.length > 0 && !isReviewed && (
+                <div className="mt-4 border-t border-gray-100 pt-4 bg-indigo-50/30 -mx-6 -mb-6 p-6 rounded-b-lg">
+                    <h4 className="font-semibold text-gray-900 mb-2">Review your purchase</h4>
+                    <p className="text-sm text-gray-600 mb-4">How was the product? Your feedback helps other shoppers.</p>
+                    <StarRating productId={order.items[0].product_id} initialRating={order.items[0].product?.reviews?.[0]?.rating || 0} />
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function Orders({ orders }) {
     
     const confirmDelivery = (orderId) => {
@@ -86,77 +220,15 @@ export default function Orders({ orders }) {
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
-                    {orders.length > 0 ? orders.map(order => {
-                        const currentStepIndex = getProgressIndex(order.status);
-                        
-                        return (
-                            <div key={order.id} className="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-6">
-                                <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-4">
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-900">Order #{order.id}</h3>
-                                        <p className="text-sm text-gray-500">{new Date(order.created_at).toLocaleString()}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xl font-extrabold text-gray-900">${parseFloat(order.total_price).toFixed(2)}</p>
-                                        <p className="text-sm font-medium text-indigo-600 uppercase">{order.status.replace(/_/g, ' ')}</p>
-                                    </div>
-                                </div>
-
-                                {/* Progress Bar */}
-                                <div className="py-6 mb-6">
-                                    <div className="relative">
-                                        <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-100">
-                                            <div style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500 transition-all duration-500"></div>
-                                        </div>
-                                        <div className="flex justify-between text-xs font-medium text-gray-500 absolute w-full" style={{ top: '15px' }}>
-                                            {steps.map((step, index) => (
-                                                <div key={step.id} className={`flex flex-col items-center ${index <= currentStepIndex ? 'text-indigo-600 font-bold' : ''}`} style={{ width: '20%', transform: index === 0 ? 'translateX(-40%)' : index === steps.length - 1 ? 'translateX(40%)' : 'none' }}>
-                                                    <span>{step.label}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="mt-12 space-y-4">
-                                    <h4 className="font-semibold text-gray-800">Items:</h4>
-                                    {order.items?.map(item => (
-                                        <div key={item.id} className="flex justify-between items-center text-sm">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
-                                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                </div>
-                                                <div>
-                                                    <p className="font-medium text-gray-900">{item.product?.name || 'Product deleted'}</p>
-                                                    <p className="text-gray-500">Qty: {item.quantity}</p>
-                                                </div>
-                                            </div>
-                                            <span className="font-medium text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="mt-6 flex justify-end gap-4 border-t border-gray-100 pt-6">
-                                    {order.status !== 'delivered' && (
-                                        <button 
-                                            onClick={() => confirmDelivery(order.id)}
-                                            className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
-                                        >
-                                            Confirm Delivery
-                                        </button>
-                                    )}
-                                </div>
-
-                                {/* Review section if delivered */}
-                                {order.status === 'delivered' && order.items && order.items.length > 0 && (
-                                    <div className="mt-4 border-t border-gray-100 pt-4 bg-indigo-50/30 -mx-6 -mb-6 p-6 rounded-b-lg">
-                                        <h4 className="font-semibold text-gray-900 mb-2">Review your purchase</h4>
-                                        <p className="text-sm text-gray-600 mb-4">How was the product? Your feedback helps other shoppers.</p>
-                                        <StarRating productId={order.items[0].product_id} />
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    }) : (
+                    {orders.length > 0 ? orders.map(order => (
+                        <OrderCard 
+                            key={order.id} 
+                            order={order} 
+                            steps={steps} 
+                            getProgressIndex={getProgressIndex} 
+                            confirmDelivery={confirmDelivery} 
+                        />
+                    )) : (
                         <div className="bg-white p-12 rounded-lg shadow-sm text-center border border-gray-200">
                             <h3 className="text-lg font-medium text-gray-900">No orders yet</h3>
                             <p className="mt-1 text-gray-500">When you buy products, they will appear here.</p>

@@ -71,6 +71,15 @@ class CheckoutController extends Controller
                     'quantity'   => $item['quantity'],
                     'price'      => $item['price'],
                 ]);
+
+                // Reduce stock
+                $itemSellerId = $item['seller_id'] ?? $sellerId;
+                if ($itemSellerId) {
+                    DB::table('sellerproduct')
+                        ->where('seller_id', $itemSellerId)
+                        ->where('product_id', $item['product_id'])
+                        ->decrement('stock', $item['quantity']);
+                }
             }
         });
 
