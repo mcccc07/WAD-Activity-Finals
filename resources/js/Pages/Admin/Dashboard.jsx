@@ -103,37 +103,86 @@ export default function Dashboard() {
                         </table>
 
                         {/* Pagination */}
-                        <div className="mt-4 flex items-center justify-between">
-                            <span className="text-sm text-gray-600">
-                                Showing {users.from} to {users.to} of {users.total} users
+                        <div className="mt-6 mb-2 flex flex-col items-center justify-between sm:flex-row">
+                            <span className="text-sm text-gray-600 mb-4 sm:mb-0">
+                                Showing {users.from || 0} to {users.to || 0} of {users.total} users
                             </span>
-                            <div className="flex gap-2">
-                                {users.prev_page_url ? (
-                                    <Link
-                                        href={users.prev_page_url}
-                                        className="rounded border bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                    >
-                                        Previous
-                                    </Link>
-                                ) : (
-                                    <span className="cursor-not-allowed rounded border bg-gray-100 px-4 py-2 text-sm text-gray-400">Previous</span>
-                                )}
+                            
+                            {users.links && users.links.length > 3 && (
+                                <div className="flex">
+                                    <nav className="inline-flex -space-x-px rounded-md shadow-sm bg-[#1e293b] border border-[#334155]">
+                                        {users.links.map((link, index) => {
+                                            const isFirst = index === 0;
+                                            const isLast = index === users.links.length - 1;
+                                            
+                                            let content = <span dangerouslySetInnerHTML={{ __html: link.label }} />;
+                                            if (link.label.includes('Previous')) {
+                                                content = (
+                                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                                                    </svg>
+                                                );
+                                            } else if (link.label.includes('Next')) {
+                                                content = (
+                                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                                    </svg>
+                                                );
+                                            } else if (link.label === '...') {
+                                                content = <span>...</span>;
+                                            }
 
-                                <span className="rounded border bg-gray-800 px-4 py-2 text-sm text-white">
-                                    Page {users.current_page} of {users.last_page}
-                                </span>
+                                            // Determine rounded corners
+                                            let roundedClass = '';
+                                            if (isFirst) roundedClass = 'rounded-l-md';
+                                            if (isLast) roundedClass = 'rounded-r-md';
 
-                                {users.next_page_url ? (
-                                    <Link
-                                        href={users.next_page_url}
-                                        className="rounded border bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                    >
-                                        Next
-                                    </Link>
-                                ) : (
-                                    <span className="cursor-not-allowed rounded border bg-gray-100 px-4 py-2 text-sm text-gray-400">Next</span>
-                                )}
-                            </div>
+                                            // Base classes
+                                            let baseClass = `flex items-center justify-center px-4 py-2 text-sm font-medium border-[#334155] border-x hover:bg-[#334155] transition-colors focus:z-20 focus:outline-offset-0 ${roundedClass}`;
+                                            
+                                            // Handle borders for first and last to prevent double borders
+                                            if (isFirst) baseClass = baseClass.replace('border-x', 'border-r');
+                                            if (isLast) baseClass = baseClass.replace('border-x', 'border-l');
+                                            if (!isFirst && !isLast) baseClass = baseClass.replace('border-x', 'border-r'); // all middle elements have right border
+                                            
+                                            // If last element, remove the right border as the container has a border
+                                            if (isLast) {
+                                                baseClass = baseClass.replace('border-r', '');
+                                            }
+
+                                            if (link.active) {
+                                                // Active styling
+                                                return (
+                                                    <span key={index} aria-current="page" className={`z-10 bg-[#6366f1] text-white ${baseClass.replace('hover:bg-[#334155]', '')}`}>
+                                                        {content}
+                                                    </span>
+                                                );
+                                            }
+
+                                            if (!link.url) {
+                                                // Disabled styling
+                                                return (
+                                                    <span key={index} className={`text-gray-400 cursor-not-allowed ${baseClass.replace('hover:bg-[#334155]', '')}`}>
+                                                        {content}
+                                                    </span>
+                                                );
+                                            }
+
+                                            // Default link styling
+                                            return (
+                                                <Link
+                                                    key={index}
+                                                    href={link.url}
+                                                    className={`text-white hover:text-white ${baseClass}`}
+                                                    preserveScroll
+                                                >
+                                                    {content}
+                                                </Link>
+                                            );
+                                        })}
+                                    </nav>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
