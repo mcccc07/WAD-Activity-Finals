@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, Link } from '@inertiajs/react';
 import { useState } from 'react';
 
-function StarRating({ productId, initialRating = 0 }) {
+function StarRating({ productId, orderId, initialRating = 0 }) {
     const [hovered, setHovered] = useState(0);
     const [selected, setSelected] = useState(initialRating);
     const [submitted, setSubmitted] = useState(false);
@@ -11,7 +11,7 @@ function StarRating({ productId, initialRating = 0 }) {
 
     const handleSubmit = () => {
         if (!selected) return;
-        router.post(route('reviews.store'), { product_id: productId, rating: selected, comment }, {
+        router.post(route('reviews.store'), { product_id: productId, order_id: orderId, rating: selected, comment }, {
             preserveScroll: true,
             onSuccess: () => { setSubmitted(true); setShowForm(false); },
         });
@@ -60,7 +60,7 @@ function StarRating({ productId, initialRating = 0 }) {
 }
 
 function OrderCard({ order, steps, getProgressIndex, confirmDelivery }) {
-    const isReviewed = order.status === 'delivered' && order.items?.some(item => item.product?.reviews?.length > 0);
+    const isReviewed = order.status === 'delivered' && order.reviews?.length > 0;
     const [showDetails, setShowDetails] = useState(!isReviewed);
     const currentStepIndex = getProgressIndex(order.status);
 
@@ -162,7 +162,15 @@ function OrderCard({ order, steps, getProgressIndex, confirmDelivery }) {
             </div>
 
             <div className="mt-6 flex justify-end gap-4 border-t border-gray-100 pt-6">
-                {order.status !== 'delivered' && (
+                {order.status !== 'delivered' && order.status !== 'out_for_delivery' && (
+                    <button 
+                        disabled
+                        className="px-6 py-2 bg-gray-400 text-white rounded-lg font-medium cursor-not-allowed shadow-sm"
+                    >
+                        Pending
+                    </button>
+                )}
+                {order.status === 'out_for_delivery' && (
                     <button 
                         onClick={() => confirmDelivery(order.id)}
                         className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
@@ -186,7 +194,7 @@ function OrderCard({ order, steps, getProgressIndex, confirmDelivery }) {
                 <div className="mt-4 border-t border-gray-100 pt-4 bg-indigo-50/30 -mx-6 -mb-6 p-6 rounded-b-lg">
                     <h4 className="font-semibold text-gray-900 mb-2">{isReviewed ? 'Your Review' : 'Review your purchase'}</h4>
                     {!isReviewed && <p className="text-sm text-gray-600 mb-4">How was the product? Your feedback helps other shoppers.</p>}
-                    <StarRating productId={order.items[0].product_id} initialRating={order.items[0].product?.reviews?.[0]?.rating || 0} />
+                    <StarRating productId={order.items[0].product_id} orderId={order.id} initialRating={order.reviews?.[0]?.rating || 0} />
                 </div>
             )}
         </div>

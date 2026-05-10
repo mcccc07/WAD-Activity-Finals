@@ -16,9 +16,9 @@ class OrderController extends Controller
              ->where('is_notified', false)
              ->update(['is_notified' => true]);
 
-        $orders = Order::with(['items.product.reviews' => function($query) {
+        $orders = Order::with(['items.product', 'seller', 'reviews' => function($query) {
             $query->where('user_id', Auth::id());
-        }, 'seller'])
+        }])
             ->where('user_id', Auth::id())
             ->latest()
             ->get();
