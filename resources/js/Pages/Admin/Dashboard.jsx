@@ -110,50 +110,34 @@ export default function Dashboard() {
                             
                             {users.links && users.links.length > 3 && (
                                 <div className="flex">
-                                    <nav className="inline-flex -space-x-px rounded-md shadow-sm bg-white border border-gray-300">
+                                    <nav className="inline-flex items-center space-x-1 rounded-lg bg-white px-2 py-2 shadow-sm border border-gray-200">
                                         {users.links.map((link, index) => {
-                                            const isFirst = index === 0;
-                                            const isLast = index === users.links.length - 1;
-                                            
                                             let content = <span dangerouslySetInnerHTML={{ __html: link.label }} />;
+                                            
+                                            // Make arrows slightly larger/bolder to match the photo
                                             if (link.label.includes('Previous')) {
                                                 content = (
                                                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
                                                     </svg>
                                                 );
                                             } else if (link.label.includes('Next')) {
                                                 content = (
                                                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
                                                     </svg>
                                                 );
                                             } else if (link.label === '...') {
-                                                content = <span>...</span>;
+                                                content = <span className="px-1">...</span>;
                                             }
 
-                                            // Determine rounded corners
-                                            let roundedClass = '';
-                                            if (isFirst) roundedClass = 'rounded-l-md';
-                                            if (isLast) roundedClass = 'rounded-r-md';
-
-                                            // Base classes
-                                            let baseClass = `flex items-center justify-center px-4 py-2 text-sm font-medium border-gray-300 border-x hover:bg-gray-50 transition-colors focus:z-20 focus:outline-offset-0 ${roundedClass}`;
-                                            
-                                            // Handle borders for first and last to prevent double borders
-                                            if (isFirst) baseClass = baseClass.replace('border-x', 'border-r');
-                                            if (isLast) baseClass = baseClass.replace('border-x', 'border-l');
-                                            if (!isFirst && !isLast) baseClass = baseClass.replace('border-x', 'border-r'); // all middle elements have right border
-                                            
-                                            // If last element, remove the right border as the container has a border
-                                            if (isLast) {
-                                                baseClass = baseClass.replace('border-r', '');
-                                            }
+                                            // Base classes for each item without joined borders
+                                            let baseClass = `flex items-center justify-center px-3 py-1.5 min-w-[2rem] text-sm font-medium rounded-md transition-colors focus:outline-none`;
 
                                             if (link.active) {
-                                                // Active styling
+                                                // Active styling (border instead of fill, matching photo style)
                                                 return (
-                                                    <span key={index} aria-current="page" className={`z-10 bg-gray-900 text-white ${baseClass.replace('hover:bg-gray-50', '')}`}>
+                                                    <span key={index} aria-current="page" className={`z-10 border-2 border-gray-900 text-gray-900 ${baseClass}`}>
                                                         {content}
                                                     </span>
                                                 );
@@ -162,18 +146,22 @@ export default function Dashboard() {
                                             if (!link.url) {
                                                 // Disabled styling
                                                 return (
-                                                    <span key={index} className={`text-gray-400 cursor-not-allowed bg-gray-50 ${baseClass.replace('hover:bg-gray-50', '')}`}>
+                                                    <span key={index} className={`text-gray-400 cursor-not-allowed ${baseClass}`}>
                                                         {content}
                                                     </span>
                                                 );
                                             }
 
                                             // Default link styling
+                                            // Arrows can be styled slightly darker to match the strong arrows in the photo
+                                            const isArrow = link.label.includes('Previous') || link.label.includes('Next');
+                                            const textColor = isArrow ? 'text-gray-900' : 'text-gray-600';
+                                            
                                             return (
                                                 <Link
                                                     key={index}
                                                     href={link.url}
-                                                    className={`text-gray-700 hover:text-gray-900 ${baseClass}`}
+                                                    className={`${textColor} hover:bg-gray-100 hover:text-gray-900 ${baseClass}`}
                                                     preserveScroll
                                                 >
                                                     {content}

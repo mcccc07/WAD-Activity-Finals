@@ -13,7 +13,7 @@ class AdminController extends Controller
     public function index()
     {
         return Inertia::render('Admin/Dashboard', [
-            'users' => User::orderBy('id', 'asc')->paginate(10)
+            'users' => User::orderBy('id', 'asc')->paginate(10)->onEachSide(2)
         ]);
     }
     public function create()
