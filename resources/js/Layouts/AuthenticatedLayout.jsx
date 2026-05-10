@@ -58,7 +58,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 <span className={`flex-shrink-0 relative ${collapsed ? '' : 'mr-3'}`}>
                     {icon}
                     {badge > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-0.5 shadow-sm border border-white">
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-indigo-600 text-white text-[9px] font-bold px-0.5">
                             {badge > 9 ? '9+' : badge}
                         </span>
                     )}
@@ -68,7 +68,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 <span className="truncate flex items-center">
                     {children}
                     {badge > 0 && (
-                        <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                        <span className="ml-2 inline-flex items-center justify-center text-xs bg-indigo-100 text-indigo-700 font-semibold px-1.5 py-0.5 rounded-full">
                             {badge}
                         </span>
                     )}
