@@ -12,7 +12,13 @@ class Seller extends Model
         'shop_description',
         'shop_logo',
         'status',
+        'is_approved',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function profile()
     {
