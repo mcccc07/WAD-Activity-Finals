@@ -110,7 +110,7 @@ export default function Dashboard() {
                             
                             {users.links && users.links.length > 3 && (
                                 <div className="flex">
-                                    <nav className="inline-flex -space-x-px rounded-md shadow-sm bg-[#1e293b] border border-[#334155]">
+                                    <nav className="inline-flex -space-x-px rounded-md shadow-sm bg-white border border-gray-300">
                                         {users.links.map((link, index) => {
                                             const isFirst = index === 0;
                                             const isLast = index === users.links.length - 1;
@@ -138,7 +138,7 @@ export default function Dashboard() {
                                             if (isLast) roundedClass = 'rounded-r-md';
 
                                             // Base classes
-                                            let baseClass = `flex items-center justify-center px-4 py-2 text-sm font-medium border-[#334155] border-x hover:bg-[#334155] transition-colors focus:z-20 focus:outline-offset-0 ${roundedClass}`;
+                                            let baseClass = `flex items-center justify-center px-4 py-2 text-sm font-medium border-gray-300 border-x hover:bg-gray-50 transition-colors focus:z-20 focus:outline-offset-0 ${roundedClass}`;
                                             
                                             // Handle borders for first and last to prevent double borders
                                             if (isFirst) baseClass = baseClass.replace('border-x', 'border-r');
@@ -153,7 +153,7 @@ export default function Dashboard() {
                                             if (link.active) {
                                                 // Active styling
                                                 return (
-                                                    <span key={index} aria-current="page" className={`z-10 bg-[#6366f1] text-white ${baseClass.replace('hover:bg-[#334155]', '')}`}>
+                                                    <span key={index} aria-current="page" className={`z-10 bg-gray-900 text-white ${baseClass.replace('hover:bg-gray-50', '')}`}>
                                                         {content}
                                                     </span>
                                                 );
@@ -162,7 +162,7 @@ export default function Dashboard() {
                                             if (!link.url) {
                                                 // Disabled styling
                                                 return (
-                                                    <span key={index} className={`text-gray-400 cursor-not-allowed ${baseClass.replace('hover:bg-[#334155]', '')}`}>
+                                                    <span key={index} className={`text-gray-400 cursor-not-allowed bg-gray-50 ${baseClass.replace('hover:bg-gray-50', '')}`}>
                                                         {content}
                                                     </span>
                                                 );
@@ -173,7 +173,7 @@ export default function Dashboard() {
                                                 <Link
                                                     key={index}
                                                     href={link.url}
-                                                    className={`text-white hover:text-white ${baseClass}`}
+                                                    className={`text-gray-700 hover:text-gray-900 ${baseClass}`}
                                                     preserveScroll
                                                 >
                                                     {content}
